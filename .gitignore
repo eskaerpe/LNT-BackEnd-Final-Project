@@ -37,3 +37,5 @@ probe_auth.php
 inspect_users.php
 reset_user_password.php
 restore_admin_user.php
+test_file_upload.php
+test_file_upload.ps1
