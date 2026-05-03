@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\PublicCategoryController;
+use App\Http\Controllers\PublicProductController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -18,25 +24,34 @@ Route::get('/ping', function () {
     return response()->json(['pong' => true]);
 });
 
-// Authentication routes (Phase 1 - placeholder)
-// POST /api/login - User login (JWT)
-// POST /api/logout - User logout
+// ==================== Authentication Routes ====================
+Route::prefix('auth')->group(function () {
+    // Public auth routes (no auth required)
+    Route::post('/login', [AuthController::class, 'login'])->name('auth.login');
 
-// Public API routes (Phase 2 - placeholder)
-// GET /api/categories - List all categories (public, paginated)
-// GET /api/products - List all products (public, paginated)
-// GET /api/products/{slug} - Get product by slug (public)
+    // Protected auth routes (auth required)
+    Route::middleware('auth:api')->group(function () {
+        Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
+        Route::get('/me', [AuthController::class, 'me'])->name('auth.me');
+    });
+});
 
-// Admin API routes (Phase 3 - placeholder, all require auth:api)
-// POST /api/admin/categories - Create category
-// GET /api/admin/categories - List categories
-// PUT /api/admin/categories/{id} - Update category
-// DELETE /api/admin/categories/{id} - Delete category
-// POST /api/admin/products - Create product
-// GET /api/admin/products - List products
-// PUT /api/admin/products/{id} - Update product
-// DELETE /api/admin/products/{id} - Delete product
-// POST /api/admin/users - Create user
-// GET /api/admin/users - List users
-// PUT /api/admin/users/{id} - Update user
-// DELETE /api/admin/users/{id} - Delete user (with validation)
+// ==================== Public API Routes ====================
+Route::get('/categories', [PublicCategoryController::class, 'index'])->name('public.categories.index');
+Route::get('/categories/{id}', [PublicCategoryController::class, 'show'])->name('public.categories.show');
+
+Route::get('/products', [PublicProductController::class, 'index'])->name('public.products.index');
+Route::get('/products/{slug}', [PublicProductController::class, 'show'])->name('public.products.show');
+
+// ==================== Admin API Routes (auth:api protected) ====================
+Route::middleware('auth:api')->prefix('admin')->group(function () {
+    
+    // Admin Categories (CRUD)
+    Route::apiResource('categories', CategoryController::class);
+
+    // Admin Products (CRUD)
+    Route::apiResource('products', ProductController::class);
+
+    // Admin Users (CRUD)
+    Route::apiResource('users', UserController::class);
+});

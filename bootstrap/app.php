@@ -12,8 +12,48 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Ensure all API routes return JSON responses
+        $middleware->api(append: [
+            \Illuminate\Http\Middleware\HandleCors::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Handle JWT authentication exceptions - return 401 instead of 500
+        $exceptions->render(function (\Throwable $e) {
+            // JWT token exceptions
+            if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid or expired token.',
+                ], 401);
+            }
+            
+            // Token not provided
+            if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\TokenBlacklistedException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Token has been blacklisted.',
+                ], 401);
+            }
+
+            // Missing or invalid auth
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthorized. Please provide a valid token.',
+                ], 401);
+            }
+
+            // Validation exceptions
+            if ($e instanceof \Illuminate\Validation\ValidationException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $e->validator->errors(),
+                ], 422);
+            }
+
+            // Return null to let Laravel handle other exceptions normally
+            return null;
+        });
     })->create();
