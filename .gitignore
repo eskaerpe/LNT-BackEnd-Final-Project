@@ -31,3 +31,9 @@ PRD.md
 TASKS.md
 TESTING_FIXES.md
 SESSION_STATE.md
+test_api_suite.php
+debug_failures.php
+probe_auth.php
+inspect_users.php
+reset_user_password.php
+restore_admin_user.php

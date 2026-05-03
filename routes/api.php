@@ -38,7 +38,7 @@ Route::prefix('auth')->group(function () {
 
 // ==================== Public API Routes ====================
 Route::get('/categories', [PublicCategoryController::class, 'index'])->name('public.categories.index');
-Route::get('/categories/{id}', [PublicCategoryController::class, 'show'])->name('public.categories.show');
+Route::get('/categories/{category}', [PublicCategoryController::class, 'show'])->name('public.categories.show');
 
 Route::get('/products', [PublicProductController::class, 'index'])->name('public.products.index');
 Route::get('/products/{slug}', [PublicProductController::class, 'show'])->name('public.products.show');

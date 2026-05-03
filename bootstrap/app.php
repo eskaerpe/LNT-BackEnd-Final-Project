@@ -20,6 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         // Handle JWT authentication exceptions - return 401 instead of 500
         $exceptions->render(function (\Throwable $e) {
+            if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException || $e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Resource not found.',
+                ], 404);
+            }
+
             // JWT token exceptions
             if ($e instanceof \PHPOpenSourceSaver\JWTAuth\Exceptions\JWTException) {
                 return response()->json([
@@ -33,6 +40,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 return response()->json([
                     'success' => false,
                     'message' => 'Token has been blacklisted.',
+                ], 401);
+            }
+
+            // Missing or invalid auth
+            if ($e instanceof \Illuminate\Auth\AuthenticationException) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unauthenticated.',
                 ], 401);
             }
 
@@ -51,6 +66,13 @@ return Application::configure(basePath: dirname(__DIR__))
                     'message' => 'Validation failed.',
                     'errors' => $e->validator->errors(),
                 ], 422);
+            }
+
+            if (str_starts_with(request()->path(), 'api/')) {
+                return response()->json([
+                    'success' => false,
+                    'message' => config('app.debug') ? $e->getMessage() : 'Server error.',
+                ], 500);
             }
 
             // Return null to let Laravel handle other exceptions normally
